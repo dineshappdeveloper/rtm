@@ -1,4 +1,4 @@
-package com.stm
+package com.myapp.stm
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
