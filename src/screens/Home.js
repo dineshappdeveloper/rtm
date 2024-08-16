@@ -297,12 +297,13 @@ const Home = () => {
           </View>
         </Modal>
       </ScrollView>
-      {auth().currentUser.phoneNumber === '+919454310605'&&(<TouchableOpacity
-        style={styles.postButton}
-        onPress={() => navigation.navigate('CreatePost')}>
-        <FontAwesomeIcon icon={faPlus} size={24} color="#fff" />
-      </TouchableOpacity>)}
-      
+      {auth().currentUser.phoneNumber === '+919454310605' && (
+        <TouchableOpacity
+          style={styles.postButton}
+          onPress={() => navigation.navigate('CreatePost')}>
+          <FontAwesomeIcon icon={faPlus} size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
