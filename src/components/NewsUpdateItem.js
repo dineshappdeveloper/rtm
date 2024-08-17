@@ -13,6 +13,21 @@ const NewsUpdateItem = ({ item, onEdit, onDelete,isAdmin }) => {
     return <Text style={styles.noImageText}>No Image Available</Text>;
   };
 
+  const formatDateTime = (timestamp) => {
+    // Convert the timestamp to milliseconds if it's in seconds
+    const date = new Date(timestamp.seconds ? timestamp.seconds * 1000 : timestamp);
+  
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    };
+  
+    return date.toLocaleDateString(undefined, options);
+  };
   return (
     <View style={styles.itemContainer}>
       {renderFileContent()}
@@ -23,7 +38,7 @@ const NewsUpdateItem = ({ item, onEdit, onDelete,isAdmin }) => {
           <Text style={styles.itemLink}>Read more</Text>
         </TouchableOpacity>
         <Text style={styles.publishInfo}>
-          Published on: {item.publishDate} at {item.publishTime}
+          Published on: {formatDateTime(item.timestamp)}
         </Text>
       </View>
       {isAdmin&&(<View style={styles.actionsContainer}>

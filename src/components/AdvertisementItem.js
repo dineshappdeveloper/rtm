@@ -4,6 +4,21 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEdit, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 
 const AdvertisementItem = ({ item, onEdit, onDelete,isAdmin }) => {
+  const formatDateTime = (timestamp) => {
+    // Convert the timestamp to milliseconds if it's in seconds
+    const date = new Date(timestamp.seconds ? timestamp.seconds * 1000 : timestamp);
+  
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    };
+  
+    return date.toLocaleDateString(undefined, options);
+  };
   return (
     <View style={styles.itemContainer}>
       {/* Render the image only if it exists */}
@@ -16,9 +31,9 @@ const AdvertisementItem = ({ item, onEdit, onDelete,isAdmin }) => {
       )}
       <Text style={styles.itemTitle}>{item.title}</Text>
       <Text style={styles.itemDescription}>{item.description}</Text>
-      <Text style={styles.itemPublishDate}>
-        Published on: {item.publishDate} at {item.publishTime}
-      </Text>
+      <Text style={styles.publishInfo}>
+          Published on: {formatDateTime(item.timestamp)}
+        </Text>
       {/* Render the link only if it exists */}
       {item.link && (
         <TouchableOpacity onPress={() => Linking.openURL(item.link)}>

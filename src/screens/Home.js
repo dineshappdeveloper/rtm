@@ -221,7 +221,11 @@ const Home = () => {
                 item={item}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                isAdmin={auth().currentUser.phoneNumber === '+919454310605'}
+                isAdmin={
+                  auth().currentUser &&
+                  (auth().currentUser.phoneNumber === '+918790720978' ||
+                    auth().currentUser.phoneNumber === '+919052288377')
+                }
               />
             )}
             keyExtractor={(item, index) => index.toString()}
@@ -249,7 +253,11 @@ const Home = () => {
                 item={item}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                isAdmin={auth().currentUser.phoneNumber === '+919454310605'}
+                isAdmin={
+                  auth().currentUser &&
+                  (auth().currentUser.phoneNumber === '+918790720978' ||
+                    auth().currentUser.phoneNumber === '+919052288377')
+                }
               />
             )}
             keyExtractor={(item, index) => index.toString()}
@@ -276,7 +284,11 @@ const Home = () => {
                 item={item}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                isAdmin={auth().currentUser.phoneNumber === '+919454310605'}
+                isAdmin={
+                  auth().currentUser &&
+                  (auth().currentUser.phoneNumber === '+918790720978' ||
+                    auth().currentUser.phoneNumber === '+919052288377')
+                }
               />
             )}
             keyExtractor={(item, index) => index.toString()}
@@ -297,13 +309,15 @@ const Home = () => {
           </View>
         </Modal>
       </ScrollView>
-      {auth().currentUser.phoneNumber === '+919454310605' && (
-        <TouchableOpacity
-          style={styles.postButton}
-          onPress={() => navigation.navigate('CreatePost')}>
-          <FontAwesomeIcon icon={faPlus} size={24} color="#fff" />
-        </TouchableOpacity>
-      )}
+      {auth().currentUser &&
+        (auth().currentUser.phoneNumber === '+918790720978' ||
+          auth().currentUser.phoneNumber === '+919052288377') && (
+          <TouchableOpacity
+            style={styles.postButton}
+            onPress={() => navigation.navigate('CreatePost')}>
+            <FontAwesomeIcon icon={faPlus} size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
     </View>
   );
 };
