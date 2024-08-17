@@ -1,9 +1,16 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Linking } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faEdit, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faEdit, faTrash} from '@fortawesome/free-solid-svg-icons';
+const AdvertisementItem = ({item, onEdit, onDelete, isAdmin}) => {
 
-const AdvertisementItem = ({ item, onEdit, onDelete,isAdmin }) => {
   const formatDateTime = (timestamp) => {
     // Convert the timestamp to milliseconds if it's in seconds
     const date = new Date(timestamp.seconds ? timestamp.seconds * 1000 : timestamp);
@@ -22,13 +29,13 @@ const AdvertisementItem = ({ item, onEdit, onDelete,isAdmin }) => {
   return (
     <View style={styles.itemContainer}>
       {/* Render the image only if it exists */}
-      {item.file ? (
-        <Image source={{ uri: item.file.url }} style={styles.itemImage} />
+      {/* {item.file ? (
+        <Image source={{uri: item.file.url}} style={styles.itemImage} />
       ) : (
         <View style={styles.noImageContainer}>
           <Text style={styles.noImageText}>No Image Available</Text>
         </View>
-      )}
+      )} */}
       <Text style={styles.itemTitle}>{item.title}</Text>
       <Text style={styles.itemDescription}>{item.description}</Text>
       <Text style={styles.publishInfo}>
@@ -40,17 +47,21 @@ const AdvertisementItem = ({ item, onEdit, onDelete,isAdmin }) => {
           <Text style={styles.itemLink}>Learn more</Text>
         </TouchableOpacity>
       )}
-      {isAdmin&&(
+
+      {isAdmin && (
         <View style={styles.actionsContainer}>
-        <TouchableOpacity onPress={() => onEdit(item)} style={styles.actionButton}>
-          <FontAwesomeIcon icon={faEdit} size={18} color="blue" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => onDelete(item)} style={styles.actionButton}>
-          <FontAwesomeIcon icon={faDeleteLeft} size={18} color="red" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={() => onEdit(item)}
+            style={styles.actionButton}>
+            <FontAwesomeIcon icon={faEdit} size={18} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onDelete(item)}
+            style={styles.actionButton}>
+            <FontAwesomeIcon icon={faTrash} size={18} color="white" />
+          </TouchableOpacity>
+        </View>
       )}
-      
     </View>
   );
 };
@@ -64,7 +75,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginRight: 15,
     width: 280,
-    position: 'relative', 
+    position: 'relative',
   },
   itemTitle: {
     fontSize: 16,
@@ -107,14 +118,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   actionsContainer: {
-    flexDirection: 'row',
     position: 'absolute',
     bottom: 10,
     right: 10,
+    flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   actionButton: {
-    marginLeft: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 5,
+    padding: 5,
+    marginLeft: 5,
   },
 });
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faEdit, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import {faEdit, faTrash} from '@fortawesome/free-solid-svg-icons';
 
 const NewsUpdateItem = ({ item, onEdit, onDelete,isAdmin }) => {
   const renderFileContent = () => {
@@ -30,7 +30,7 @@ const NewsUpdateItem = ({ item, onEdit, onDelete,isAdmin }) => {
   };
   return (
     <View style={styles.itemContainer}>
-      {renderFileContent()}
+      {/* {renderFileContent()} */}
       <View style={styles.contentContainer}>
         <Text style={styles.itemTitle}>{item.title}</Text>
         <Text style={styles.itemDescription}>{item.description}</Text>
@@ -41,14 +41,20 @@ const NewsUpdateItem = ({ item, onEdit, onDelete,isAdmin }) => {
           Published on: {formatDateTime(item.timestamp)}
         </Text>
       </View>
-      {isAdmin&&(<View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(item)}>
-          <FontAwesomeIcon icon={faEdit} size={18} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => onDelete(item)}>
-          <FontAwesomeIcon icon={faDeleteLeft} size={18} color="white" />
-        </TouchableOpacity>
-      </View>)}
+      {isAdmin && (
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            onPress={() => onEdit(item)}
+            style={styles.actionButton}>
+            <FontAwesomeIcon icon={faEdit} size={18} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onDelete(item)}
+            style={styles.actionButton}>
+            <FontAwesomeIcon icon={faTrash} size={18} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
       
     </View>
   );
@@ -105,14 +111,12 @@ const styles = StyleSheet.create({
     right: 10,
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    alignItems: 'center',
   },
   actionButton: {
-    backgroundColor: '#007BFF',
-    borderRadius: 50,
-    padding: 8,
-    marginLeft: 10,
-    elevation: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 5,
+    padding: 5,
+    marginLeft: 5,
   },
 });
 

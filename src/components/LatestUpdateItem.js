@@ -1,9 +1,26 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faEdit, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import {  faEdit,  faTrash} from '@fortawesome/free-solid-svg-icons';
 
 const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
+
+  const formatDateTime = (timestamp) => {
+    // Convert the timestamp to milliseconds if it's in seconds
+    const date = new Date(timestamp.seconds ? timestamp.seconds * 1000 : timestamp);
+  
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    };
+  
+    return date.toLocaleDateString(undefined, options);
+  };
+
   const renderFileContent = () => {
     if (!item.file || !item.file.type) return null;
 
@@ -23,25 +40,10 @@ const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
     }
   };
 
-  const formatDateTime = (timestamp) => {
-    // Convert the timestamp to milliseconds if it's in seconds
-    const date = new Date(timestamp.seconds ? timestamp.seconds * 1000 : timestamp);
-  
-    const options = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    };
-  
-    return date.toLocaleDateString(undefined, options);
-  };
   return (
     <View style={styles.itemContainer}>
       <View style={styles.contentContainer}>
-        {renderFileContent()}
+        {/* {renderFileContent()} */}
         <Text style={styles.itemTitle}>{item.title}</Text>
         <Text style={styles.itemDescription}>{item.description}</Text>
         <Text style={styles.publishInfo}>
@@ -55,13 +57,13 @@ const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
             onPress={() => onEdit(item)}
             style={styles.actionButton}
           >
-            <FontAwesomeIcon icon={faEdit} size={18} color="white"/>
+            <FontAwesomeIcon icon={faEdit} size={18} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onDelete(item)}
             style={styles.actionButton}
           >
-            <FontAwesomeIcon icon={faDeleteLeft} size={18} color="white" />
+            <FontAwesomeIcon icon={faTrash} size={18} color="white" />
           </TouchableOpacity>
         </View>
       )}
@@ -79,7 +81,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
     width: 280,
     position: 'relative',
+  flex:1
   },
+  
   contentContainer: {
     paddingBottom: 40, // Add space at the bottom for action buttons
   },

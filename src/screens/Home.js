@@ -213,6 +213,7 @@ const Home = () => {
             </Text>
           </View>
         </View>
+        {/* first list start */}
         <View style={{flexDirection: 'row', marginBottom: 8, marginTop: 8}}>
           <FlatList
             data={latestUpdateList}
@@ -224,7 +225,8 @@ const Home = () => {
                 isAdmin={
                   auth().currentUser &&
                   (auth().currentUser.phoneNumber === '+918790720978' ||
-                    auth().currentUser.phoneNumber === '+919052288377')
+                    auth().currentUser.phoneNumber === '+919052288377'||
+                    auth().currentUser.phoneNumber === '+918853389395')
                 }
               />
             )}
@@ -233,6 +235,7 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
           />
         </View>
+        {/* first list end */}
 
         <View
           style={{
@@ -245,6 +248,7 @@ const Home = () => {
           </Text>
         </View>
 
+        {/* second list start */}
         <View style={{flexDirection: 'row', marginBottom: 8, marginTop: 8}}>
           <FlatList
             data={newsList}
@@ -256,7 +260,9 @@ const Home = () => {
                 isAdmin={
                   auth().currentUser &&
                   (auth().currentUser.phoneNumber === '+918790720978' ||
-                    auth().currentUser.phoneNumber === '+919052288377')
+                    auth().currentUser.phoneNumber === '+919052288377'||
+                     auth().currentUser.phoneNumber === '+918853389395'
+                  )
                 }
               />
             )}
@@ -265,7 +271,7 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
           />
         </View>
-
+        {/* second list start */}
         <View
           style={{
             flexDirection: 'row',
@@ -276,6 +282,7 @@ const Home = () => {
             Advertisement
           </Text>
         </View>
+        {/* Third List Start */}
         <View style={{flexDirection: 'row', marginBottom: 8, marginTop: 8}}>
           <FlatList
             data={advertisementList}
@@ -287,7 +294,9 @@ const Home = () => {
                 isAdmin={
                   auth().currentUser &&
                   (auth().currentUser.phoneNumber === '+918790720978' ||
-                    auth().currentUser.phoneNumber === '+919052288377')
+                    auth().currentUser.phoneNumber === '+919052288377'||
+                    auth().currentUser.phoneNumber === '+918853389395'
+                  )
                 }
               />
             )}
@@ -296,6 +305,7 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
           />
         </View>
+        {/* Third List End  */}
 
         <Modal
           visible={isCalendarVisible}
@@ -311,7 +321,8 @@ const Home = () => {
       </ScrollView>
       {auth().currentUser &&
         (auth().currentUser.phoneNumber === '+918790720978' ||
-          auth().currentUser.phoneNumber === '+919052288377') && (
+          auth().currentUser.phoneNumber === '+919052288377'||
+          auth().currentUser.phoneNumber === '+918853389395') && (
           <TouchableOpacity
             style={styles.postButton}
             onPress={() => navigation.navigate('CreatePost')}>
