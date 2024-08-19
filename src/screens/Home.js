@@ -22,6 +22,7 @@ import {
   faTrash,
   faPlus,
   faSignOutAlt,
+  faL,
 } from '@fortawesome/free-solid-svg-icons';
 import CalendarPicker from 'react-native-calendar-picker';
 import {ScrollView} from 'react-native-gesture-handler';
@@ -32,6 +33,8 @@ import NewsUpdateItem from '../components/NewsUpdateItem';
 import LatestUpdateItem from '../components/LatestUpdateItem';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import NewsItem from '../components/NewsItem';
+import LatestItem from '../components/LatestItem';
 
 const packageData = [
   {label: 'Telugu', value: '1'},
@@ -115,14 +118,27 @@ const Home = () => {
         console.error('Error logging out: ', error);
       });
   };
-  const handleEdit = item => {
-    // Handle edit logic
-    console.log('Edit:', item);
+  const handleEditLatestUpdate = () => {
+    navigation.navigate('ShowAllUpdates', { flag: 'latest_updates' });
+
   };
 
-  const handleDelete = item => {
-    // Handle delete logic
-    console.log('Delete:', item);
+  const handleDeleteLatestUpdate = item => {
+    navigation.navigate('ShowAllUpdates', { flag: 'latest_updates' });
+  };
+
+  const handleEditLatestNews = item => {
+    navigation.navigate('ShowAllUpdates', { flag: 'news' });
+  };
+  const handleDeleteLatestNews = item => {
+    navigation.navigate('ShowAllUpdates', { flag: 'news' });
+  };
+
+  const handleEditLatestAdvirtaisement = item => {
+    navigation.navigate('ShowAllUpdates', { flag: 'advertisement' });
+  };
+  const handleDeleteLatestAdvertisement = item => {
+    navigation.navigate('ShowAllUpdates', { flag: 'advertisement' });
   };
 
   const handleSelectLanguage = (index, value) => {
@@ -194,51 +210,78 @@ const Home = () => {
           <FontAwesomeIcon icon={faFilterCircleXmark} size={18} color="black" />
         </TouchableOpacity>
       </View>
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContainer}
-        showsVerticalScrollIndicator={false}>
-        <View
-          style={{
-            padding: 2,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}>
-          <Text style={{fontSize: 16, fontWeight: '800', color: 'orange'}}>
-            Latest Updates
-          </Text>
-          <View>
-            <Text style={{fontSize: 10, color: 'black', fontWeight: '400'}}>
-              {startDate}
-            </Text>
-          </View>
-        </View>
-        {/* first list start */}
-        <View style={{flexDirection: 'row', marginBottom: 8, marginTop: 8}}>
-          <FlatList
-            data={latestUpdateList}
-            renderItem={({item}) => (
-              <LatestUpdateItem
-                item={item}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                isAdmin={
-                  auth().currentUser &&
-                  (auth().currentUser.phoneNumber === '+918790720978' ||
-                    auth().currentUser.phoneNumber === '+919052288377'||
-                    auth().currentUser.phoneNumber === '+918853389395')
-                }
-              />
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-        {/* first list end */}
 
+      <View
+        style={{
+          paddingLeft: 2,
+          paddingRight: 2,
+          paddingTop: 8,
+          paddingBottom: 8,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+        <Text style={{fontSize: 16, fontWeight: '800', color: 'orange'}}>
+          Latest Updates
+        </Text>
+        {auth().currentUser &&
+          (auth().currentUser.phoneNumber === '+918790720978' ||
+            auth().currentUser.phoneNumber === '+919052288377' ||
+            auth().currentUser.phoneNumber === '+918853389395') && (
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+              }}>
+              <TouchableOpacity onPress={handleEditLatestUpdate}>
+                <View style={{flexDirection: 'row'}}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: 'black',
+                      marginRight: 10,
+                      fontWeight: '500',
+                    }}>
+                    Edit
+                  </Text>
+                  <FontAwesomeIcon icon={faEdit} size={12} color="black" />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleDeleteLatestUpdate}>
+                <View style={{flexDirection: 'row'}}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: 'black',
+                      marginRight: 10,
+                      marginLeft: 10,
+                      fontWeight: '500',
+                    }}>
+                    Delete
+                  </Text>
+                  <FontAwesomeIcon icon={faTrash} size={12} color="black" />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+      </View>
+
+      <View style={styles.boxContainer}>
+        <View style={[styles.updateBox, styles.box1]}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {latestUpdateList.map((item, index) => {
+              return <LatestItem key={index} item={item} />;
+            })}
+          </ScrollView>
+        </View>
         <View
           style={{
+            paddingLeft: 2,
+            paddingRight: 2,
+            paddingTop: 8,
+            paddingBottom: 8,
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -246,34 +289,63 @@ const Home = () => {
           <Text style={{fontSize: 16, fontWeight: '800', color: 'orange'}}>
             News
           </Text>
+          {auth().currentUser &&
+            (auth().currentUser.phoneNumber === '+918790720978' ||
+              auth().currentUser.phoneNumber === '+919052288377' ||
+              auth().currentUser.phoneNumber === '+918853389395') && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                }}>
+                <TouchableOpacity onPress={handleEditLatestNews}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: 'black',
+                        marginRight: 10,
+                        fontWeight: '500',
+                      }}>
+                      Edit
+                    </Text>
+                    <FontAwesomeIcon icon={faEdit} size={12} color="black" />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDeleteLatestNews}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: 'black',
+                        marginRight: 10,
+                        marginLeft: 10,
+                        fontWeight: '500',
+                      }}>
+                      Delete
+                    </Text>
+                    <FontAwesomeIcon icon={faTrash} size={12} color="black" />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
         </View>
 
-        {/* second list start */}
-        <View style={{flexDirection: 'row', marginBottom: 8, marginTop: 8}}>
-          <FlatList
-            data={newsList}
-            renderItem={({item}) => (
-              <NewsUpdateItem
-                item={item}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                isAdmin={
-                  auth().currentUser &&
-                  (auth().currentUser.phoneNumber === '+918790720978' ||
-                    auth().currentUser.phoneNumber === '+919052288377'||
-                     auth().currentUser.phoneNumber === '+918853389395'
-                  )
-                }
-              />
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
+        <View style={[styles.updateBox, styles.box1]}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {newsList.map((item, index) => {
+              return <NewsItem key={index} item={item} />;
+            })}
+          </ScrollView>
         </View>
-        {/* second list start */}
+
         <View
           style={{
+            paddingLeft: 2,
+            paddingRight: 2,
+            paddingTop: 8,
+            paddingBottom: 8,
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -281,47 +353,71 @@ const Home = () => {
           <Text style={{fontSize: 16, fontWeight: '800', color: 'orange'}}>
             Advertisement
           </Text>
-        </View>
-        {/* Third List Start */}
-        <View style={{flexDirection: 'row', marginBottom: 8, marginTop: 8}}>
-          <FlatList
-            data={advertisementList}
-            renderItem={({item}) => (
-              <AdvertisementItem
-                item={item}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                isAdmin={
-                  auth().currentUser &&
-                  (auth().currentUser.phoneNumber === '+918790720978' ||
-                    auth().currentUser.phoneNumber === '+919052288377'||
-                    auth().currentUser.phoneNumber === '+918853389395'
-                  )
-                }
-              />
+          {auth().currentUser &&
+            (auth().currentUser.phoneNumber === '+918790720978' ||
+              auth().currentUser.phoneNumber === '+919052288377' ||
+              auth().currentUser.phoneNumber === '+918853389395') && (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <TouchableOpacity onPress={handleEditLatestAdvirtaisement}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: 'black',
+                        marginRight: 10,
+                        fontWeight: '500',
+                      }}>
+                      Edit
+                    </Text>
+                    <FontAwesomeIcon icon={faEdit} size={12} color="black" />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDeleteLatestAdvertisement}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: 'black',
+                        marginRight: 10,
+                        marginLeft: 10,
+                        fontWeight: '500',
+                      }}>
+                      Delete
+                    </Text>
+                    <FontAwesomeIcon icon={faTrash} size={12} color="black" />
+                  </View>
+                </TouchableOpacity>
+              </View>
             )}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
         </View>
-        {/* Third List End  */}
-
-        <Modal
-          visible={isCalendarVisible}
-          transparent={true}
-          animationType="slide">
-          <View style={styles.calendarContainer}>
-            <CalendarPicker onDateChange={onDateChange} />
-            <TouchableOpacity onPress={hideCalendar} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
-      </ScrollView>
+        <View style={[styles.box, styles.box3]}>
+          <ScrollView
+            horizontal={true} // Enable horizontal scrolling
+            showsHorizontalScrollIndicator={true} // Show horizontal scrollbar
+            contentContainerStyle={styles.scrollContainer} // Container style
+          >
+            {advertisementList.map((item, index) => (
+              <View key={index} style={styles.itemWrapper}>
+                <AdvertisementItem item={item} />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+      <Modal
+        visible={isCalendarVisible}
+        transparent={true}
+        animationType="slide">
+        <View style={styles.calendarContainer}>
+          <CalendarPicker onDateChange={onDateChange} />
+          <TouchableOpacity onPress={hideCalendar} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
       {auth().currentUser &&
         (auth().currentUser.phoneNumber === '+918790720978' ||
-          auth().currentUser.phoneNumber === '+919052288377'||
+          auth().currentUser.phoneNumber === '+919052288377' ||
           auth().currentUser.phoneNumber === '+918853389395') && (
           <TouchableOpacity
             style={styles.postButton}
@@ -334,6 +430,13 @@ const Home = () => {
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexDirection: 'row',
+  },
+  itemWrapper: {
+    width: 250,
+    marginRight: 10,
+  },
   scrollViewContainer: {
     flexGrow: 1,
     paddingBottom: 65,

@@ -7,6 +7,7 @@ import SplashScreen from '../screens/Splash';
 import Home from '../screens/Home';
 import Payment from '../screens/Payment';
 import CreatePost from '../screens/CreatePost';
+import ShowAllUpdates from '../screens/ShowAllUpdates';
 
 const Stack = createStackNavigator();
 
@@ -36,6 +37,7 @@ const AppNavigation = () => {
           options={{headerShown: false}}
         />
         <Stack.Screen name="CreatePost" component={CreatePost} />
+        <Stack.Screen name="ShowAllUpdates" component={ShowAllUpdates} />
       </Stack.Navigator>
     </GestureHandlerRootView>
   );

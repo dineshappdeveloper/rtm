@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {  faEdit,  faTrash} from '@fortawesome/free-solid-svg-icons';
+import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faEdit, faTrash} from '@fortawesome/free-solid-svg-icons';
 
-const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
-
-  const formatDateTime = (timestamp) => {
+const LatestUpdateItem = ({item, onEdit, onDelete, isAdmin}) => {
+  const formatDateTime = timestamp => {
     // Convert the timestamp to milliseconds if it's in seconds
-    const date = new Date(timestamp.seconds ? timestamp.seconds * 1000 : timestamp);
-  
+    const date = new Date(
+      timestamp.seconds ? timestamp.seconds * 1000 : timestamp,
+    );
+
     const options = {
       year: 'numeric',
       month: 'long',
@@ -17,7 +18,7 @@ const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
       minute: '2-digit',
       second: '2-digit',
     };
-  
+
     return date.toLocaleDateString(undefined, options);
   };
 
@@ -26,7 +27,7 @@ const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
 
     switch (item.file.type) {
       case 'image':
-        return <Image source={{ uri: item.file.url }} style={styles.itemImage} />;
+        return <Image source={{uri: item.file.url}} style={styles.itemImage} />;
       case 'video':
         return <Text style={styles.itemFileType}>Video</Text>;
       case 'audio':
@@ -41,7 +42,13 @@ const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
   };
 
   return (
-    <View style={styles.itemContainer}>
+    <View
+      style={{
+        backgroundColor: '#D3D3D3',
+        marginBottom: 8,
+        padding: 8,
+        borderRadius: 8,
+      }}>
       <View style={styles.contentContainer}>
         {/* {renderFileContent()} */}
         <Text style={styles.itemTitle}>{item.title}</Text>
@@ -55,14 +62,12 @@ const LatestUpdateItem = ({ item, onEdit, onDelete, isAdmin }) => {
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             onPress={() => onEdit(item)}
-            style={styles.actionButton}
-          >
+            style={styles.actionButton}>
             <FontAwesomeIcon icon={faEdit} size={18} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onDelete(item)}
-            style={styles.actionButton}
-          >
+            style={styles.actionButton}>
             <FontAwesomeIcon icon={faTrash} size={18} color="white" />
           </TouchableOpacity>
         </View>
@@ -81,11 +86,11 @@ const styles = StyleSheet.create({
     marginRight: 10,
     width: 280,
     position: 'relative',
-  flex:1
+    flex: 1,
   },
-  
+
   contentContainer: {
-    paddingBottom: 40, // Add space at the bottom for action buttons
+    paddingBottom: 40, 
   },
   itemTitle: {
     fontSize: 14,

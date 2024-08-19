@@ -288,7 +288,7 @@ const CreatePost = () => {
               </ScrollView>
             </View>
           )}
-          <View style={styles.iconContainer}>
+          {categoryValue&&categoryValue==='advertisement'&&(<View style={styles.iconContainer}>
             <View style={styles.iconButtonContainer}>
               <TouchableOpacity style={styles.iconButton}>
                 <FontAwesomeIcon icon={faImage} size={24} color="black" />
@@ -307,7 +307,8 @@ const CreatePost = () => {
               </TouchableOpacity>
               <Text style={styles.iconLabel}>File</Text>
             </View>
-          </View>
+          </View>)}
+          
           <TouchableOpacity
             style={styles.addPostButton}
             onPress={handleAddPost}>
