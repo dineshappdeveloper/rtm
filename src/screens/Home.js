@@ -434,8 +434,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   itemWrapper: {
-    width: 250,
-    marginRight: 10,
+    height:'auto',
+    width: 360,
+    marginRight:8
+
   },
   scrollViewContainer: {
     flexGrow: 1,
@@ -505,7 +507,6 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   box3: {
-    padding: 5,
     borderRadius: 5,
     borderWidth: 1,
     backgroundColor: '#fff',

@@ -67,8 +67,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'lightgrey',
     padding: 15,
-    marginRight: 15,
-    width: 280,
+    marginBottom:8,
     position: 'relative',
   },
   itemImage: {

@@ -1,15 +1,21 @@
 import React from 'react';
-import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faEdit, faTrash} from '@fortawesome/free-solid-svg-icons';
 
 const LatestUpdateItem = ({item, onEdit, onDelete, isAdmin}) => {
+
   const formatDateTime = timestamp => {
-    // Convert the timestamp to milliseconds if it's in seconds
     const date = new Date(
       timestamp.seconds ? timestamp.seconds * 1000 : timestamp,
     );
-
     const options = {
       year: 'numeric',
       month: 'long',
@@ -22,42 +28,17 @@ const LatestUpdateItem = ({item, onEdit, onDelete, isAdmin}) => {
     return date.toLocaleDateString(undefined, options);
   };
 
-  const renderFileContent = () => {
-    if (!item.file || !item.file.type) return null;
-
-    switch (item.file.type) {
-      case 'image':
-        return <Image source={{uri: item.file.url}} style={styles.itemImage} />;
-      case 'video':
-        return <Text style={styles.itemFileType}>Video</Text>;
-      case 'audio':
-        return <Text style={styles.itemFileType}>Audio</Text>;
-      case 'pdf':
-        return <Text style={styles.itemFileType}>PDF</Text>;
-      case 'doc':
-        return <Text style={styles.itemFileType}>DOC</Text>;
-      default:
-        return <Text style={styles.itemFileType}>Unsupported file type</Text>;
-    }
-  };
-
+  
   return (
-    <View
-      style={{
-        backgroundColor: '#D3D3D3',
-        marginBottom: 8,
-        padding: 8,
-        borderRadius: 8,
-      }}>
+    <View style={styles.itemContainer}>
       <View style={styles.contentContainer}>
-        {/* {renderFileContent()} */}
         <Text style={styles.itemTitle}>{item.title}</Text>
         <Text style={styles.itemDescription}>{item.description}</Text>
+
         <Text style={styles.publishInfo}>
           Published on: {formatDateTime(item.timestamp)}
         </Text>
       </View>
-
       {isAdmin && (
         <View style={styles.actionsContainer}>
           <TouchableOpacity
@@ -79,45 +60,46 @@ const LatestUpdateItem = ({item, onEdit, onDelete, isAdmin}) => {
 const styles = StyleSheet.create({
   itemContainer: {
     backgroundColor: '#fff',
-    borderRadius: 5,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: 'lightgrey',
-    padding: 10,
-    marginRight: 10,
-    width: 280,
+    padding: 15,
+    marginBottom: 8,
     position: 'relative',
-    flex: 1,
-  },
-
-  contentContainer: {
-    paddingBottom: 40, 
-  },
-  itemTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'black',
-    marginTop: 10, // Ensure space above title
-  },
-  itemDescription: {
-    fontSize: 12,
-    color: 'black',
-    marginTop: 5, // Ensure space above description
   },
   itemImage: {
     width: '100%',
-    height: 84,
-    borderRadius: 5,
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  noImageText: {
+    fontSize: 14,
+    color: 'grey',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  contentContainer: {
+    marginBottom: 40,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  itemDescription: {
+    fontSize: 14,
+    color: 'black',
     marginVertical: 5,
   },
-  itemFileType: {
-    fontSize: 12,
-    color: 'grey',
-    marginVertical: 5, // Space above and below file type
+  itemLink: {
+    fontSize: 14,
+    color: 'blue',
   },
   publishInfo: {
     fontSize: 12,
     color: 'grey',
-    marginTop: 5,
+    marginTop: 10,
   },
   actionsContainer: {
     position: 'absolute',

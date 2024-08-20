@@ -4,8 +4,13 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 const AdvertisementItem = ({ item }) => {
   return (
     <View style={styles.container}>
-      {item.file ? (
-        <Image source={{ uri: item.file.url }} style={styles.itemImage} />
+      {item.file && item.file.url ? (
+        <Image 
+          source={{ uri: item.file.url }} 
+          style={styles.itemImage} 
+          onError={() => console.log('Error loading image')} // Log error if image fails to load
+          resizeMode="cover" // Adjust image resizing mode
+        />
       ) : (
         <View style={styles.noImageContainer}>
           <Text style={styles.noImageText}>No Image Available</Text>
@@ -17,18 +22,19 @@ const AdvertisementItem = ({ item }) => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 10,
+    width: '100%', 
+    borderRadius: 5,
     overflow: 'hidden',
     backgroundColor: '#fff',
+    height: 100,
   },
   itemImage: {
     width: '100%',
-    height: undefined,
-    aspectRatio: 16 / 9, // Maintain aspect ratio
+    height: '100%',
   },
   noImageContainer: {
     width: '100%',
-    height: 150,
+    height: 100, // Match the height of the image container
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,

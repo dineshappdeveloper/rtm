@@ -5,6 +5,7 @@ import NewsUpdateItem from '../components/NewsUpdateItem';
 import AdvertisementUpdateItem from '../components/AdvertisementUpdateItem';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { faL } from '@fortawesome/free-solid-svg-icons';
 
 const ShowAllUpdates = ({route}) => {
   const {flag} = route.params || {};
@@ -127,7 +128,7 @@ const ShowAllUpdates = ({route}) => {
         );
       case 'advertisement':
         return (
-          <ScrollView horizontal={true} style={styles.scrollView}>
+          <ScrollView horizontal={false} style={styles.scrollView}>
             {advertisementList.map((item, index) => (
               <AdvertisementUpdateItem key={index} item={item} 
               onEdit={handleEditLatestAdvirtaisement}
