@@ -1,14 +1,13 @@
-import React, {useState, useEffect} from 'react';
-import {View, ScrollView, Text, StyleSheet} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, Text, StyleSheet, Alert } from 'react-native';
 import LatestUpdateItem from '../components/LatestUpdateItem';
 import NewsUpdateItem from '../components/NewsUpdateItem';
 import AdvertisementUpdateItem from '../components/AdvertisementUpdateItem';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { faL } from '@fortawesome/free-solid-svg-icons';
 
-const ShowAllUpdates = ({route}) => {
-  const {flag} = route.params || {};
+const ShowAllUpdates = ({ route, navigation }) => {
+  const { flag } = route.params || {};
   const [latestUpdateList, setLatestUpdateList] = useState([]);
   const [newsList, setNewsList] = useState([]);
   const [advertisementList, setAdvertisementList] = useState([]);
@@ -33,23 +32,20 @@ const ShowAllUpdates = ({route}) => {
           if (data && data.category) {
             switch (data.category) {
               case 'latest_updates':
-                latestUpdates.push(data);
+                latestUpdates.push({ ...data, id: documentSnapshot.id });
                 break;
               case 'news':
-                news.push(data);
+                news.push({ ...data, id: documentSnapshot.id });
                 break;
               case 'advertisement':
-                advertisements.push(data);
+                advertisements.push({ ...data, id: documentSnapshot.id });
                 break;
               default:
                 console.warn(`Unknown category: ${data.category}`);
                 break;
             }
           } else {
-            console.warn(
-              'Document missing required fields:',
-              documentSnapshot.id,
-            );
+            console.warn('Document missing required fields:', documentSnapshot.id);
           }
         });
 
@@ -65,26 +61,61 @@ const ShowAllUpdates = ({route}) => {
       });
   };
 
-  const handleEditLatestUpdate = (item) => {
-    console.log('handleDeleteLatestUpdate:', item);
-  };
-
   const handleDeleteLatestUpdate = (item) => {
-    console.log('handleDeleteLatestUpdate:', item);
+    firestore()
+      .collection('post')
+      .doc(item.id)
+      .delete()
+      .then(() => {
+        Alert.alert('Deleted', 'Item has been deleted successfully.');
+        fetchAndFilterPosts(); 
+      })
+      .catch(error => {
+        console.error('Error deleting item: ', error);
+        Alert.alert('Error', 'Failed to delete the item. Please try again.');
+      });
   };
 
-  const handleEditLatestNews = item => {
-    console.log('handleEditLatestNews:', item);
-  };
-  const handleDeleteLatestNews = item => {
-    console.log('handleDeleteLatestNews:', item);
+  const handleEditLatestUpdate = (item) => {
+    navigation.navigate('CreatePost', { item }); 
   };
 
-  const handleEditLatestAdvirtaisement = item => {
-    console.log('handleEditLatestAdvirtaisement:', item);
+  const handleDeleteLatestNews = (item) => {
+    firestore()
+      .collection('post')
+      .doc(item.id)
+      .delete()
+      .then(() => {
+        Alert.alert('Deleted', 'Item has been deleted successfully.');
+        fetchAndFilterPosts();
+      })
+      .catch(error => {
+        console.error('Error deleting item: ', error);
+        Alert.alert('Error', 'Failed to delete the item. Please try again.');
+      });
   };
-  const handleDeleteLatestAdvertisement = item => {
-    console.log('handleDeleteLatestAdvertisement:', item);
+
+  const handleEditLatestNews = (item) => {
+    navigation.navigate('CreatePost', { item });
+  };
+
+  const handleDeleteLatestAdvertisement = (item) => {
+    firestore()
+      .collection('post')
+      .doc(item.id)
+      .delete()
+      .then(() => {
+        Alert.alert('Deleted', 'Item has been deleted successfully.');
+        fetchAndFilterPosts();
+      })
+      .catch(error => {
+        console.error('Error deleting item: ', error);
+        Alert.alert('Error', 'Failed to delete the item. Please try again.');
+      });
+  };
+
+  const handleEditLatestAdvertisement = (item) => {
+    navigation.navigate('CreatePost', { item });
   };
 
   const renderList = () => {
@@ -98,12 +129,7 @@ const ShowAllUpdates = ({route}) => {
                 item={item}
                 onEdit={handleEditLatestUpdate}
                 onDelete={handleDeleteLatestUpdate}
-                isAdmin={
-                  auth().currentUser &&
-                  (auth().currentUser.phoneNumber === '+918790720978' ||
-                    auth().currentUser.phoneNumber === '+919052288377' ||
-                    auth().currentUser.phoneNumber === '+918853389395')
-                }
+                isAdmin={isAdmin()}
               />
             ))}
           </ScrollView>
@@ -112,16 +138,12 @@ const ShowAllUpdates = ({route}) => {
         return (
           <ScrollView style={styles.scrollView}>
             {newsList.map((item, index) => (
-              <NewsUpdateItem key={index} item={item} 
-              onEdit={handleEditLatestNews}
-              onDelete={handleDeleteLatestNews}
-              isAdmin={
-                auth().currentUser &&
-                (auth().currentUser.phoneNumber === '+918790720978' ||
-                  auth().currentUser.phoneNumber === '+919052288377' ||
-                  auth().currentUser.phoneNumber === '+918853389395')
-              }
-            
+              <NewsUpdateItem
+                key={index}
+                item={item}
+                onEdit={handleEditLatestNews}
+                onDelete={handleDeleteLatestNews}
+                isAdmin={isAdmin()}
               />
             ))}
           </ScrollView>
@@ -130,16 +152,12 @@ const ShowAllUpdates = ({route}) => {
         return (
           <ScrollView horizontal={false} style={styles.scrollView}>
             {advertisementList.map((item, index) => (
-              <AdvertisementUpdateItem key={index} item={item} 
-              onEdit={handleEditLatestAdvirtaisement}
-              onDelete={handleDeleteLatestAdvertisement}
-              isAdmin={
-                auth().currentUser &&
-                (auth().currentUser.phoneNumber === '+918790720978' ||
-                  auth().currentUser.phoneNumber === '+919052288377' ||
-                  auth().currentUser.phoneNumber === '+918853389395')
-              }
-            
+              <AdvertisementUpdateItem
+                key={index}
+                item={item}
+                onEdit={handleEditLatestAdvertisement}
+                onDelete={handleDeleteLatestAdvertisement}
+                isAdmin={isAdmin()}
               />
             ))}
           </ScrollView>
@@ -147,6 +165,16 @@ const ShowAllUpdates = ({route}) => {
       default:
         return <Text style={styles.noDataText}>No data available</Text>;
     }
+  };
+
+  const isAdmin = () => {
+    const currentUser = auth().currentUser;
+    return (
+      currentUser &&
+      ['+918790720978', '+919052288377', '+918853389395'].includes(
+        currentUser.phoneNumber
+      )
+    );
   };
 
   return <View style={styles.container}>{renderList()}</View>;
