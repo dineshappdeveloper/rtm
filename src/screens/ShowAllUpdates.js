@@ -65,11 +65,11 @@ const ShowAllUpdates = ({route}) => {
       });
   };
 
-  const handleEditLatestUpdate = () => {
-    navigation.navigate('ShowAllUpdates', {flag: 'latest_updates'});
+  const handleEditLatestUpdate = (item) => {
+    console.log('handleDeleteLatestUpdate:', item);
   };
 
-  const handleDeleteLatestUpdate = item => {
+  const handleDeleteLatestUpdate = (item) => {
     console.log('handleDeleteLatestUpdate:', item);
   };
 

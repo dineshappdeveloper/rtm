@@ -8,8 +8,8 @@ const AdvertisementItem = ({ item }) => {
         <Image 
           source={{ uri: item.file.url }} 
           style={styles.itemImage} 
-          onError={() => console.log('Error loading image')} // Log error if image fails to load
-          resizeMode="cover" // Adjust image resizing mode
+          onError={() => console.log('Error loading image')}
+          resizeMode="cover"
         />
       ) : (
         <View style={styles.noImageContainer}>
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: 'hidden',
     backgroundColor: '#fff',
-    height: 100,
+    height: 138,
   },
   itemImage: {
     width: '100%',
