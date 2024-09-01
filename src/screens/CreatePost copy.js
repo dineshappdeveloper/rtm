@@ -11,7 +11,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-  PermissionsAndroid,
+  PermissionsAndroid
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -37,7 +37,7 @@ import DocumentPicker, {
   isCancel,
   isInProgress,
   types,
-} from 'react-native-document-picker';
+} from 'react-native-document-picker'
 
 import {Video} from 'expo-av';
 
@@ -66,52 +66,35 @@ const CreatePost = () => {
   const [isPackageDropdownVisible, setPackageDropdownVisible] = useState(false);
   const [isCategoryDropdownVisible, setCategoryDropdownVisible] =
     useState(false);
-  const [packages, setPackages] = useState([]);
 
-  useEffect(() => {
-    const unsubscribe = firestore()
-      .collection('packages')
-      .orderBy('id', 'asc')
-      .onSnapshot(snapshot => {
-        const fetchedPackages = snapshot.docs.map(doc => ({
-          id: doc.data().id,
-          ...doc.data(),
-        }));
-  
-        // Add {label: 'All', value: '0'} at the 0 index
-        fetchedPackages.unshift({ label: 'All', value: '0' });
-  
-        setPackages(fetchedPackages);
-      });
-  
-    return () => unsubscribe();
-  }, []);
-  
 
-  useEffect(() => {
-    async function requestStoragePermission() {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          {
-            title: 'Storage Permission',
-            message: 'This app needs access to your storage to read files.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('Storage permission granted');
-        } else {
-          console.log('Storage permission denied');
+    
+
+    useEffect(()=>{
+      async function requestStoragePermission() {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            {
+              title: 'Storage Permission',
+              message: 'This app needs access to your storage to read files.',
+              buttonNeutral: 'Ask Me Later',
+              buttonNegative: 'Cancel',
+              buttonPositive: 'OK',
+            }
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('Storage permission granted');
+          } else {
+            console.log('Storage permission denied');
+          }
+        } catch (err) {
+          console.warn(err);
         }
-      } catch (err) {
-        console.warn(err);
       }
-    }
-    requestStoragePermission();
-  }, []);
+      requestStoragePermission();
+    },[]);
+
 
   const handleFolderPress = folderName => {
     Alert.alert(`You pressed ${folderName}`);
@@ -133,6 +116,8 @@ const CreatePost = () => {
     }
     return true;
   };
+
+
 
   const handleAddPost = async () => {
     if (validateFields()) {
@@ -187,6 +172,7 @@ const CreatePost = () => {
     }
   };
 
+
   const selectImage = () => {
     launchImageLibrary({mediaType: 'photo'}, response => {
       if (response.didCancel) {
@@ -217,71 +203,74 @@ const CreatePost = () => {
     });
   };
 
-  const requestStoragePermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Access Permission',
-          message: 'This app needs access to your storage to select files.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
 
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
+
+
+const requestStoragePermission = async () => {
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      {
+        title: 'Storage Access Permission',
+        message: 'This app needs access to your storage to select files.',
+        buttonNeutral: 'Ask Me Later',
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      },
+    );
+
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  } catch (err) {
+    console.warn(err);
+    return false;
+  }
+};
+
+const selectFile = async () => {
+  try {
+    const pickerResult = await DocumentPicker.pickSingle({
+      presentationStyle: 'fullScreen',
+      copyTo: 'cachesDirectory',
+    });
+
+    setSelectedFiles(prevFiles => [
+      ...prevFiles,
+      { uri: pickerResult.uri, type: pickerResult.type, name: pickerResult.name },
+    ]);
+
+  } catch (e) {
+    if (DocumentPicker.isCancel(e)) {
+      console.log('User cancelled file picker');
+    } else {
+      console.log('DocumentPicker Error: ', e.message);
     }
-  };
+  }
+};
 
-  const selectFile = async () => {
-    try {
-      const pickerResult = await DocumentPicker.pickSingle({
-        presentationStyle: 'fullScreen',
-        copyTo: 'cachesDirectory',
-      });
 
-      setSelectedFiles(prevFiles => [
-        ...prevFiles,
-        {
-          uri: pickerResult.uri,
-          type: pickerResult.type,
-          name: pickerResult.name,
-        },
-      ]);
-    } catch (e) {
-      if (DocumentPicker.isCancel(e)) {
-        console.log('User cancelled file picker');
-      } else {
-        console.log('DocumentPicker Error: ', e.message);
-      }
-    }
-  };
+
 
   const togglePackageSelection = item => {
     if (item.value === '0') {
       if (selectedPackages.includes('0')) {
         setSelectedPackages([]);
       } else {
-        setSelectedPackages(packages.map(pkg => pkg.id));
+        setSelectedPackages(packageData.map(pkg => pkg.value));
       }
     } else {
       setSelectedPackages(prevSelectedPackages => {
-        const newSelectedPackages = prevSelectedPackages.includes(item.id)
-          ? prevSelectedPackages.filter(value => value !== item.id)
-          : [...prevSelectedPackages, item.id];
+        const newSelectedPackages = prevSelectedPackages.includes(item.value)
+          ? prevSelectedPackages.filter(value => value !== item.value)
+          : [...prevSelectedPackages, item.value];
 
         if (
-          newSelectedPackages.length === packages.length - 1 &&
+          newSelectedPackages.length === packageData.length - 1 &&
           !newSelectedPackages.includes('0')
         ) {
           newSelectedPackages.push('0');
         } else if (
           newSelectedPackages.includes('0') &&
-          newSelectedPackages.length < packages.length
+          newSelectedPackages.length < packageData.length
         ) {
           return newSelectedPackages.filter(value => value !== '0');
         }
@@ -292,14 +281,11 @@ const CreatePost = () => {
 
   const renderPackageItem = item => (
     <TouchableOpacity
-      key={item.id}
+      key={item.value}
       style={styles.item}
-      onPress={() => togglePackageSelection(item)}
-    >
-      <Text style={styles.textItem}>
-        {item.value === '0' ? item.label : item.name}
-      </Text>
-      {selectedPackages.includes(item.id) && (
+      onPress={() => togglePackageSelection(item)}>
+      <Text style={styles.textItem}>{item.label}</Text>
+      {selectedPackages.includes(item.value) && (
         <FontAwesomeIcon
           icon={faCheck}
           style={styles.icon}
@@ -309,7 +295,7 @@ const CreatePost = () => {
       )}
     </TouchableOpacity>
   );
-  
+
   const renderCategoryItem = item => (
     <TouchableOpacity
       key={item.value}
@@ -338,7 +324,7 @@ const CreatePost = () => {
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}>
-        <GroupFolder onFolderPress={handleFolderPress}  packages={packages}/>
+        <GroupFolder onFolderPress={handleFolderPress} />
         <View style={styles.formContainer}>
           <View style={{paddingVertical: 10}}>
             <TouchableOpacity
@@ -379,7 +365,8 @@ const CreatePost = () => {
                       ? selectedPackages
                           .map(
                             value =>
-                              packages.find(item => item.id === value)?.name,
+                              packageData.find(item => item.value === value)
+                                ?.label,
                           )
                           .join(', ')
                       : 'Select Group'}
@@ -407,7 +394,7 @@ const CreatePost = () => {
             onBackdropPress={() => setPackageDropdownVisible(false)}
             style={{margin: 0, justifyContent: 'flex-end'}}>
             <View style={styles.modalContent}>
-              {packages.map(renderPackageItem)}
+              {packageData.map(renderPackageItem)}
             </View>
           </Modal>
           <Text style={styles.label}>Post Description</Text>

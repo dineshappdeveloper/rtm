@@ -16,7 +16,8 @@ import * as Animatable from 'react-native-animatable';
 import Button from '../components/Button';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 
-export default function Payment() {
+export default function Payment({route}) {
+  const {amount} = route.params;
   const navigation = useNavigation();
 
   const goToHome = () => {
@@ -26,13 +27,15 @@ export default function Payment() {
     <KeyboardAvoidingView
       style={{flex: 1, backgroundColor: 'white'}}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View
+      <View style={styles.paymentContainer}>
+        <Text style={styles.heading}>Payment Summary</Text>
+        <Text style={styles.amount}>Payable Amount: ₹{amount}</Text>
+      </View>
+      {/* <View
         style={{
-          paddingVertical: 10,
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
-          marginTop: 30,
           marginLeft: 180,
         }}>
         <Text
@@ -45,7 +48,7 @@ export default function Payment() {
           Edit
         </Text>
         <FontAwesomeIcon icon={faEdit} size={16} color="black" />
-      </View>
+      </View> */}
       <View
         style={{
           flexDirection: 'row',
@@ -104,6 +107,7 @@ export default function Payment() {
           Call For Confirmation : 7799432462
         </Text>
       </View>
+
       <View
         style={{alignContent: 'center', alignItems: 'center', marginTop: 16}}>
         <TouchableOpacity onPress={goToHome}>
@@ -122,4 +126,17 @@ export default function Payment() {
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  paymentContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom:16
+  },
+  heading: {
+    fontSize: 24,
+  },
+  amount: {
+    fontSize: 20,
+    color: 'green',
+  },
+});

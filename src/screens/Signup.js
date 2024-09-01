@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,11 @@ import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faCheck,
   faChevronCircleDown,
+  faCross,
   faPhone,
   faShop,
   faUser,
+  faWindowClose,
 } from '@fortawesome/free-solid-svg-icons';
 import * as Animatable from 'react-native-animatable';
 import Button from '../components/Button';
@@ -27,53 +29,13 @@ const {width} = Dimensions.get('window');
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
-const packageData = [
-  {label: 'Bullion rates', value: '1'},
-  {label: 'Agri rates', value: '2'},
-  {label: 'MCX tips', value: '3'},
-  {label: 'NCDX tips', value: '4'},
-];
-
-const durationData = {
-  1: [
-    {label: 'One year', value: 'one_year'},
-    {label: 'Two years', value: 'two_years'},
-    {label: 'Three years', value: 'three_years'},
-    {label: 'Four years', value: 'four_years'},
-    {label: 'Five years', value: 'five_years'},
-    {label: 'Life time', value: 'lifetime'},
-  ],
-  2: [
-    {label: 'Six months', value: 'six_months'},
-    {label: 'One year', value: 'one_year'},
-    {label: 'Two years', value: 'two_years'},
-    {label: 'Three years', value: 'three_years'},
-    {label: 'Four years', value: 'four_years'},
-    {label: 'Five years', value: 'five_years'},
-    {label: 'Ten years', value: 'ten_years'},
-    {label: 'Life time', value: 'lifetime'},
-  ],
-  3: [
-    {label: 'One month', value: 'one_month'},
-    {label: 'Three months', value: 'three_months'},
-    {label: 'Six months', value: 'six_months'},
-    {label: 'One year', value: 'one_year'},
-  ],
-  4: [
-    {label: 'One month', value: 'one_month'},
-    {label: 'Three months', value: 'three_months'},
-    {label: 'Six months', value: 'six_months'},
-    {label: 'One year', value: 'one_year'},
-  ],
-};
-
 export default function Signup() {
   const [loading, setLoading] = useState(false);
-
+  const [packages, setPackages] = useState([]);
   const navigation = useNavigation();
   const [confirmResult, setConfirmResult] = useState(null);
   const [otp, setOtp] = useState('');
-  const [resendTimeout, setResendTimeout] = useState(60); // Timeout for resending OTP
+  const [resendTimeout, setResendTimeout] = useState(60);
 
   const [surname, setSurname] = useState('');
   const [name, setName] = useState('');
@@ -85,11 +47,25 @@ export default function Signup() {
   const [district, setDistrict] = useState('');
   const [state, setState] = useState('');
 
-  const [packageValue, setPackageValue] = useState(null);
-  const [durationValue, setDurationValue] = useState(null);
+  const [selectedPackages, setSelectedPackages] = useState([]);
+  const [selectedDurations, setSelectedDurations] = useState({});
   const [isPackageDropdownVisible, setPackageDropdownVisible] = useState(false);
-  const [isDurationDropdownVisible, setDurationDropdownVisible] =
-    useState(false);
+  const [isDurationDropdownVisible, setDurationDropdownVisible] = useState({});
+
+  useEffect(() => {
+    const unsubscribe = firestore()
+      .collection('packages')
+      .orderBy('id', 'asc')
+      .onSnapshot(snapshot => {
+        const fetchedPackages = snapshot.docs.map(doc => ({
+          id: doc.data().id,
+          ...doc.data(),
+        }));
+        setPackages(fetchedPackages);
+      });
+
+    return () => unsubscribe();
+  }, []);
 
   const validateFields = () => {
     if (
@@ -112,40 +88,83 @@ export default function Signup() {
       return false;
     }
 
-    if (!packageValue) {
-      Alert.alert('Error', 'Please select a package.');
+    if (selectedPackages.length === 0) {
+      Alert.alert('Error', 'Please select at least one package.');
       return false;
     }
 
-    if (!durationValue) {
-      Alert.alert('Error', 'Please select a duration.');
-      return false;
+    for (const pkg of selectedPackages) {
+      if (!selectedDurations[pkg]) {
+        Alert.alert(
+          'Error',
+          `Please select a duration for the package: ${
+            packages.find(p => p.id === pkg)?.name || ''
+          }`,
+        );
+        return false;
+      }
     }
 
     return true;
   };
 
-  const handleSubmit = () => {
+  const toggleDurationDropdown = packageValue => {
+    setDurationDropdownVisible(prevState => ({
+      ...prevState,
+      [packageValue]: !prevState[packageValue],
+    }));
+  };
+
+  const closeDurationDropdown = packageValue => {
+    setDurationDropdownVisible(prevState => ({
+      ...prevState,
+      [packageValue]: false,
+    }));
+  };
+
+  const handlePackageSelection = value => {
+    setSelectedPackages(prev => {
+      if (prev.includes(value)) {
+        const updatedPackages = prev.filter(pkg => pkg !== value);
+        setSelectedDurations(prevDurations => {
+          const {[value]: _, ...rest} = prevDurations;
+          return rest;
+        });
+        return updatedPackages;
+      } else {
+        return [...prev, value];
+      }
+    });
+  };
+
+  const handleDurationSelection = (packageValue, durationValue) => {
+    setSelectedDurations(prev => ({
+      ...prev,
+      [packageValue]: durationValue,
+    }));
+  };
+
+  const handleSubmit = () => {   
     if (validateFields()) {
-      setLoading(true); // Start loading
+      setLoading(true); 
       if (phoneNumber.length === 10) {
-        const fullPhoneNumber = `+91${phoneNumber}`; // Assuming country code is +91 (India)
+        const fullPhoneNumber = `+91${phoneNumber}`; 
         auth()
           .signInWithPhoneNumber(fullPhoneNumber)
           .then(confirmResult => {
-            setLoading(false); // Stop loading
+            setLoading(false); 
             setConfirmResult(confirmResult);
             setResendTimeout(60);
             startResendTimer();
             Alert.alert('OTP Sent!', 'Please check your phone.');
           })
           .catch(error => {
-            setLoading(false); // Stop loading
+            setLoading(false); 
             console.log(error.message);
             Alert.alert('Error', error.message);
           });
       } else {
-        setLoading(false); // Stop loading
+        setLoading(false); 
         Alert.alert(
           'Invalid Number',
           'Please enter a valid 10-digit phone number.',
@@ -155,20 +174,56 @@ export default function Signup() {
   };
 
   const handleConfirmOTP = () => {
-    console.log(otp);
+    let totalPrice = 0;
+    let totalPackagesWithDurationsAndPrice = [];
+    // Iterate over the selected packages
+    selectedPackages.forEach(pkgId => {
+      // Find the corresponding package object by its ID
+      const pkg = packages.find(p => p.id === pkgId);
+    
+      if (pkg) {
+        // Get the selected duration index for this package
+        const selectedDurationIndex = selectedDurations[pkgId.toString()];
+        
+        // Find the selected duration within the package
+        const selectedDuration = pkg.durations.find(d => d.id === selectedDurationIndex);
+    
+        if (selectedDuration) {
+          // Log the package details
+          console.log(`Package: ${pkg.name}, Duration: ${selectedDuration.duration}, Price: ${selectedDuration.price}`);
+    
+          // Calculate the total price
+          totalPrice += parseFloat(selectedDuration.price);
+    
+          // Store the package, duration, and price details
+          totalPackagesWithDurationsAndPrice.push({
+            packageName: pkg.name,
+            duration: selectedDuration.duration,
+            price: parseFloat(selectedDuration.price),
+          });
+        } else {
+          console.error(`Selected duration with index ${selectedDurationIndex} not found for package ${pkg.name}`);
+        }
+      } else {
+        console.error(`Package with ID ${pkgId} not found`);
+      }
+    });
+    console.log("Total Packages with Durations and Price:", totalPackagesWithDurationsAndPrice);
+    // Log the total price
+    console.log(`Total Price: ${totalPrice}`);
+    
 
+    console.log(otp);
     if (otp.length !== 6) {
       Alert.alert('Invalid OTP', 'Please enter a valid 6-digit OTP.');
       return;
     }
 
-    setLoading(true); // Start loading
-
+    setLoading(true); //Start loading
     confirmResult
       .confirm(otp)
       .then(userCredential => {
         const user = userCredential.user;
-
         // Save data to Firestore
         firestore()
           .collection('users')
@@ -185,15 +240,14 @@ export default function Signup() {
               district: district,
               state: state,
             },
-            packageValue: packageValue,
-            durationValue: durationValue,
+            packages: selectedDurations,
             userid: user.uid,
           })
           .then(() => {
             setLoading(false); // Stop loading
             console.log('User data added to Firestore!');
             Alert.alert('Success!', 'You are now signed in.');
-            navigation.navigate('Payment');
+            navigation.navigate('Payment', { amount: totalPrice });
           })
           .catch(error => {
             setLoading(false); // Stop loading
@@ -222,15 +276,11 @@ export default function Signup() {
 
   const renderPackageItem = item => (
     <TouchableOpacity
-      key={item.value}
+      key={item.id}
       style={styles.item}
-      onPress={() => {
-        setPackageValue(item.value);
-        setDurationValue(null); // reset duration value
-        setPackageDropdownVisible(false);
-      }}>
-      <Text style={styles.textItem}>{item.label}</Text>
-      {item.value === packageValue && (
+      onPress={() => handlePackageSelection(item.id)}>
+      <Text style={styles.textItem}>{item.name}</Text>
+      {selectedPackages.includes(item.id) && (
         <FontAwesomeIcon
           icon={faCheck}
           style={styles.icon}
@@ -241,16 +291,13 @@ export default function Signup() {
     </TouchableOpacity>
   );
 
-  const renderDurationItem = item => (
+  const renderDurationItem = (packageValue, item) => (
     <TouchableOpacity
-      key={item.value}
+      key={item.id}
       style={styles.item}
-      onPress={() => {
-        setDurationValue(item.value);
-        setDurationDropdownVisible(false);
-      }}>
-      <Text style={styles.textItem}>{item.label}</Text>
-      {item.value === durationValue && (
+      onPress={() => handleDurationSelection(packageValue, item.id)}>
+      <Text style={styles.textItem}>{item.duration} ₹{item.price}</Text>
+      {selectedDurations[packageValue] === item.id && (
         <FontAwesomeIcon
           icon={faCheck}
           style={styles.icon}
@@ -393,71 +440,101 @@ export default function Signup() {
                 />
               </View>
             </View>
-            <View style={{paddingVertical: 10}}>
-              <TouchableOpacity
-                style={styles.dropdown}
-                onPress={() => setPackageDropdownVisible(true)}>
+            <Text style={{fontSize: 18, fontWeight: '600', color: 'black'}}>
+              Packages:
+            </Text>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() =>
+                setPackageDropdownVisible(!isPackageDropdownVisible)
+              }>
+              <Text style={styles.textDropdown}>
+                {selectedPackages.length > 0
+                  ? selectedPackages
+                      .map(pkg => packages.find(p => p.id === pkg)?.name || '')
+                      .join(', ')
+                  : 'Select package(s)'}
+              </Text>
+              <FontAwesomeIcon icon={faChevronCircleDown} size={20} />
+            </TouchableOpacity>
+            <Modal isVisible={isPackageDropdownVisible}>
+              <View style={styles.modalContent}>
                 <View
                   style={{
                     flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    justifyContent: 'flex-end',
                   }}>
-                  <Text style={styles.selectedTextStyle}>
-                    {packageData.find(item => item.value === packageValue)
-                      ?.label || 'Select package'}
-                  </Text>
-                  <FontAwesomeIcon
-                    icon={faChevronCircleDown}
-                    style={styles.icon}
-                    color="black"
-                    size={20}
-                  />
+                  <TouchableOpacity
+                    onPress={() => setPackageDropdownVisible(false)}>
+                    <FontAwesomeIcon
+                      icon={faWindowClose}
+                      color="black"
+                      size={30}
+                    />
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            </View>
-            {packageValue && (
-              <View style={{paddingVertical: 10}}>
+                {packages.map(pkg => renderPackageItem(pkg))}
+
+                <Button
+                  title={'Save'}
+                  containerStyle={styles.button}
+                  onPress={() => setPackageDropdownVisible(false)}
+                />
+              </View>
+            </Modal>
+
+            {selectedPackages.map(packageValue => (
+              <View key={packageValue}>
+                <Text style={styles.durationLabel}>
+                  Duration for {packages.find(p => p.id === packageValue)?.name}
+                  :
+                </Text>
                 <TouchableOpacity
                   style={styles.dropdown}
-                  onPress={() => setDurationDropdownVisible(true)}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}>
-                    <Text style={styles.selectedTextStyle}>
-                      {durationData[packageValue].find(
-                        item => item.value === durationValue,
-                      )?.label || 'Select duration'}
-                    </Text>
-                    <FontAwesomeIcon
-                      icon={faChevronCircleDown}
-                      style={styles.icon}
-                      color="black"
-                      size={20}
+                  onPress={() => toggleDurationDropdown(packageValue)}>
+                  <Text style={styles.textDropdown}>
+                    {selectedDurations[packageValue]
+                      ? packages
+                          .find(pkg => pkg.id === packageValue)
+                          .durations.find(
+                            dur => dur.id === selectedDurations[packageValue],
+                          ).duration
+                      : 'Select duration'}
+                  </Text>
+                  <FontAwesomeIcon icon={faChevronCircleDown} size={20} />
+                </TouchableOpacity>
+                <Modal isVisible={isDurationDropdownVisible[packageValue]}>
+                  <View style={styles.modalContent}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'flex-end',
+                      }}>
+                      <TouchableOpacity
+                        onPress={() => closeDurationDropdown(packageValue)}>
+                        <FontAwesomeIcon
+                          icon={faWindowClose}
+                          color="black"
+                          size={30}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {packages
+                      .find(pkg => pkg.id === packageValue)
+                      .durations.map(duration =>
+                        renderDurationItem(packageValue, duration),
+                      )}
+
+                    <Button
+                      title={'Save'}
+                      containerStyle={styles.button}
+                      onPress={() => closeDurationDropdown(packageValue)}
                     />
                   </View>
-                </TouchableOpacity>
+                </Modal>
               </View>
-            )}
-            <Modal
-              isVisible={isPackageDropdownVisible}
-              onBackdropPress={() => setPackageDropdownVisible(false)}
-              style={{margin: 0, justifyContent: 'flex-end'}}>
-              <View style={styles.modalContent}>
-                {packageData.map(renderPackageItem)}
-              </View>
-            </Modal>
-            <Modal
-              isVisible={isDurationDropdownVisible}
-              onBackdropPress={() => setDurationDropdownVisible(false)}
-              style={{margin: 0, justifyContent: 'flex-end'}}>
-              <View style={styles.modalContent}>
-                {durationData[packageValue]?.map(renderDurationItem)}
-              </View>
-            </Modal>
+            ))}
+
             <Button
               onPress={handleSubmit}
               title={'Submit'}
@@ -617,31 +694,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 20, // Adjust margin as needed
   },
-  dropdown: {
-    height: 50,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    borderWidth: 0.5,
-    borderColor: 'grey',
-    padding: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    justifyContent: 'center',
-  },
   icon: {
     marginRight: 5,
-  },
-  item: {
-    padding: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   textItem: {
     color: 'black',
@@ -654,12 +708,7 @@ const styles = StyleSheet.create({
     color: 'black',
     fontWeight: '600',
   },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
+
   buttonResend: {
     width: '100%',
     height: 'auto',
@@ -674,5 +723,50 @@ const styles = StyleSheet.create({
   },
   servicesContainer: {
     alignItems: 'center',
+  },
+  textLabel: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  textInput: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 20,
+  },
+  dropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 20,
+    justifyContent: 'space-between',
+  },
+  textDropdown: {
+    fontSize: 16,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+  },
+  item: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textPackage: {
+    color: 'grey',
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  icon: {
+    marginLeft: 10,
   },
 });

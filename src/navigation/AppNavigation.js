@@ -8,6 +8,10 @@ import Home from '../screens/Home';
 import Payment from '../screens/Payment';
 import CreatePost from '../screens/CreatePost';
 import ShowAllUpdates from '../screens/ShowAllUpdates';
+import FolderScreen from '../screens/FolderScreen';
+import EditPost from '../screens/EditPost';
+import ShowAllPackages from '../screens/AdminPackageManagement';
+import AdminPackageManagement from '../screens/AdminPackageManagement';
 
 const Stack = createStackNavigator();
 
@@ -38,7 +42,12 @@ const AppNavigation = () => {
         />
         <Stack.Screen name="CreatePost" component={CreatePost} />
         <Stack.Screen name="ShowAllUpdates" component={ShowAllUpdates} />
-      </Stack.Navigator>
+        <Stack.Screen name="FolderScreen" component={FolderScreen} />
+        <Stack.Screen name="EditPost" component={EditPost } />
+        <Stack.Screen name="AdminPackageManagement" component={AdminPackageManagement } />
+        
+
+      </Stack.Navigator> 
     </GestureHandlerRootView>
   );
 };

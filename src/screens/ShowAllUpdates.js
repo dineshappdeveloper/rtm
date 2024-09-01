@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Text, StyleSheet, Alert } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {View, ScrollView, Text, StyleSheet, Alert} from 'react-native';
 import LatestUpdateItem from '../components/LatestUpdateItem';
 import NewsUpdateItem from '../components/NewsUpdateItem';
 import AdvertisementUpdateItem from '../components/AdvertisementUpdateItem';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
-const ShowAllUpdates = ({ route, navigation }) => {
-  const { flag } = route.params || {};
+const ShowAllUpdates = ({route, navigation}) => {
+  const {flag} = route.params || {};
   const [latestUpdateList, setLatestUpdateList] = useState([]);
   const [newsList, setNewsList] = useState([]);
   const [advertisementList, setAdvertisementList] = useState([]);
@@ -25,27 +25,28 @@ const ShowAllUpdates = ({ route, navigation }) => {
         const latestUpdates = [];
         const news = [];
         const advertisements = [];
-
         querySnapshot.forEach(documentSnapshot => {
           const data = documentSnapshot.data();
-
           if (data && data.category) {
             switch (data.category) {
               case 'latest_updates':
-                latestUpdates.push({ ...data, id: documentSnapshot.id });
+                latestUpdates.push({...data, id: documentSnapshot.id});
                 break;
               case 'news':
-                news.push({ ...data, id: documentSnapshot.id });
+                news.push({...data, id: documentSnapshot.id});
                 break;
               case 'advertisement':
-                advertisements.push({ ...data, id: documentSnapshot.id });
+                advertisements.push({...data, id: documentSnapshot.id});
                 break;
               default:
                 console.warn(`Unknown category: ${data.category}`);
                 break;
             }
           } else {
-            console.warn('Document missing required fields:', documentSnapshot.id);
+            console.warn(
+              'Document missing required fields:',
+              documentSnapshot.id,
+            );
           }
         });
 
@@ -61,26 +62,7 @@ const ShowAllUpdates = ({ route, navigation }) => {
       });
   };
 
-  const handleDeleteLatestUpdate = (item) => {
-    firestore()
-      .collection('post')
-      .doc(item.id)
-      .delete()
-      .then(() => {
-        Alert.alert('Deleted', 'Item has been deleted successfully.');
-        fetchAndFilterPosts(); 
-      })
-      .catch(error => {
-        console.error('Error deleting item: ', error);
-        Alert.alert('Error', 'Failed to delete the item. Please try again.');
-      });
-  };
-
-  const handleEditLatestUpdate = (item) => {
-    navigation.navigate('CreatePost', { item }); 
-  };
-
-  const handleDeleteLatestNews = (item) => {
+  const handleDeleteLatestUpdate = item => {
     firestore()
       .collection('post')
       .doc(item.id)
@@ -95,11 +77,11 @@ const ShowAllUpdates = ({ route, navigation }) => {
       });
   };
 
-  const handleEditLatestNews = (item) => {
-    navigation.navigate('CreatePost', { item });
+  const handleEditLatestUpdate = item => {
+    navigation.navigate('EditPost', {item});
   };
 
-  const handleDeleteLatestAdvertisement = (item) => {
+  const handleDeleteLatestNews = item => {
     firestore()
       .collection('post')
       .doc(item.id)
@@ -114,8 +96,27 @@ const ShowAllUpdates = ({ route, navigation }) => {
       });
   };
 
-  const handleEditLatestAdvertisement = (item) => {
-    navigation.navigate('CreatePost', { item });
+  const handleEditLatestNews = item => {
+    navigation.navigate('EditPost', {item});
+  };
+
+  const handleDeleteLatestAdvertisement = item => {
+    firestore()
+      .collection('post')
+      .doc(item.id)
+      .delete()
+      .then(() => {
+        Alert.alert('Deleted', 'Item has been deleted successfully.');
+        fetchAndFilterPosts();
+      })
+      .catch(error => {
+        console.error('Error deleting item: ', error);
+        Alert.alert('Error', 'Failed to delete the item. Please try again.');
+      });
+  };
+
+  const handleEditLatestAdvertisement = item => {
+    navigation.navigate('EditPost', {item});
   };
 
   const renderList = () => {
@@ -172,7 +173,7 @@ const ShowAllUpdates = ({ route, navigation }) => {
     return (
       currentUser &&
       ['+918790720978', '+919052288377', '+918853389395'].includes(
-        currentUser.phoneNumber
+        currentUser.phoneNumber,
       )
     );
   };

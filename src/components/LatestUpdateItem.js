@@ -24,11 +24,8 @@ const LatestUpdateItem = ({item, onEdit, onDelete, isAdmin}) => {
       minute: '2-digit',
       second: '2-digit',
     };
-
     return date.toLocaleDateString(undefined, options);
   };
-
-  
   return (
     <View style={styles.itemContainer}>
       <View style={styles.contentContainer}>

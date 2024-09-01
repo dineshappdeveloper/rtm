@@ -34,7 +34,9 @@ const NewsUpdateItem = ({ item, onEdit, onDelete,isAdmin }) => {
       <View style={styles.contentContainer}>
         <Text style={styles.itemTitle}>{item.title}</Text>
         <Text style={styles.itemDescription}>{item.description}</Text>
-        <TouchableOpacity onPress={() => Linking.openURL(item.link)}>
+        <TouchableOpacity onPress={() => {
+          // Linking.openURL(item.link)
+        }}>
           <Text style={styles.itemLink}>Read more</Text>
         </TouchableOpacity>
         <Text style={styles.publishInfo}>
@@ -118,5 +120,4 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 });
-
 export default NewsUpdateItem;

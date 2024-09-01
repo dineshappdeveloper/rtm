@@ -19,6 +19,7 @@ import * as Animatable from 'react-native-animatable';
 import Button from '../components/Button';
 const {width} = Dimensions.get('window');
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false);
@@ -29,25 +30,50 @@ export default function SignIn() {
   const [otp, setOtp] = useState('');
   const [resendTimeout, setResendTimeout] = useState(60); // Timeout for resending OTP
 
+  const validateInDB = async phoneNumber => {
+    try {
+      setLoading(true);
+      const usersCollection = firestore().collection('users');
+      const querySnapshot = await usersCollection
+        .where('phoneNumber', '==', phoneNumber)
+        .get();
+      setLoading(false);
+      if (!querySnapshot.empty) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking phone number in Firestore:', error);
+      setLoading(false);
+      return false;
+    }
+  };
   // Function to handle sending OTP
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     setLoading(true); // Start loading
     if (phoneNumber.length === 10) {
-      const fullPhoneNumber = `+91${phoneNumber}`; // Assuming country code is +91 (India)
-      auth()
-        .signInWithPhoneNumber(fullPhoneNumber)
-        .then(confirmResult => {
-          setLoading(false); // Stop loading
-          setConfirmResult(confirmResult);
-          setResendTimeout(60); // Reset timeout for resending OTP
-          startResendTimer();
-          Alert.alert('OTP Sent!', 'Please check your phone.');
-        })
-        .catch(error => {
-          setLoading(false); // Stop loading
-          console.log(error.message);
-          Alert.alert('Error', error.message);
-        });
+      const isPhoneNumberValid = await validateInDB(phoneNumber);
+      if (isPhoneNumberValid) {
+        const fullPhoneNumber = `+91${phoneNumber}`; // Assuming country code is +91 (India)
+        auth()
+          .signInWithPhoneNumber(fullPhoneNumber)
+          .then(confirmResult => {
+            setLoading(false); // Stop loading
+            setConfirmResult(confirmResult);
+            setResendTimeout(60); // Reset timeout for resending OTP
+            startResendTimer();
+            Alert.alert('OTP Sent!', 'Please check your phone.');
+          })
+          .catch(error => {
+            setLoading(false); // Stop loading
+            console.log(error.message);
+            Alert.alert('Error', error.message);
+          });
+      } else {
+        setLoading(false); // Start loading
+        Alert.alert('Account not found', 'Please register first then login');
+      }
     } else {
       setLoading(false); // Stop loading
       Alert.alert(

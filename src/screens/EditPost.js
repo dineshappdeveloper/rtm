@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-
 import {
   faFileText,
   faImage,
@@ -27,19 +26,9 @@ import {
 import Modal from 'react-native-modal';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import GroupFolder from '../components/GroupFolder';
-
 import storage from '@react-native-firebase/storage';
 import {launchImageLibrary} from 'react-native-image-picker';
-import DocumentPicker, {
-  DirectoryPickerResponse,
-  DocumentPickerResponse,
-  isCancel,
-  isInProgress,
-  types,
-} from 'react-native-document-picker';
-
-import {Video} from 'expo-av';
+import Video from 'react-native-video';
 
 const packageData = [
   {label: 'All', value: '0'},
@@ -55,38 +44,18 @@ const categoryData = [
   {label: 'Advertisement', value: 'advertisement'},
 ];
 
-const CreatePost = () => {
+const EditPost = ({route}) => {
+  const {item} = route.params;
+  console.log(item);
   const navigation = useNavigation();
-  const [loading, setLoading] = useState(false);
-  const [description, setDescription] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [description, setDescription] = useState(item.description || '');
+  const [selectedFiles, setSelectedFiles] = useState(item.files || []);
   const [uploading, setUploading] = useState(false);
-  const [selectedPackages, setSelectedPackages] = useState([]);
-  const [categoryValue, setCategoryValue] = useState(null);
+  const [selectedPackages, setSelectedPackages] = useState(item.packages || []);
+  const [categoryValue, setCategoryValue] = useState(item.category || null);
   const [isPackageDropdownVisible, setPackageDropdownVisible] = useState(false);
   const [isCategoryDropdownVisible, setCategoryDropdownVisible] =
     useState(false);
-  const [packages, setPackages] = useState([]);
-
-  useEffect(() => {
-    const unsubscribe = firestore()
-      .collection('packages')
-      .orderBy('id', 'asc')
-      .onSnapshot(snapshot => {
-        const fetchedPackages = snapshot.docs.map(doc => ({
-          id: doc.data().id,
-          ...doc.data(),
-        }));
-  
-        // Add {label: 'All', value: '0'} at the 0 index
-        fetchedPackages.unshift({ label: 'All', value: '0' });
-  
-        setPackages(fetchedPackages);
-      });
-  
-    return () => unsubscribe();
-  }, []);
-  
 
   useEffect(() => {
     async function requestStoragePermission() {
@@ -113,10 +82,6 @@ const CreatePost = () => {
     requestStoragePermission();
   }, []);
 
-  const handleFolderPress = folderName => {
-    Alert.alert(`You pressed ${folderName}`);
-  };
-
   const validateFields = () => {
     if (description === '') {
       Alert.alert('Error', 'Please Enter Description');
@@ -126,63 +91,64 @@ const CreatePost = () => {
       Alert.alert('Error', 'Please select a category.');
       return false;
     }
-    if (selectedPackages.size === 0) {
-      // Fixing logical issue with size check
+    if (selectedPackages.length === 0) {
       Alert.alert('Error', 'Please select a package.');
       return false;
     }
     return true;
   };
 
-  const handleAddPost = async () => {
+  const handleUpdatePost = async () => {
     if (validateFields()) {
       try {
         setUploading(true);
         const userId = auth().currentUser.uid;
-        let uploadedFiles = [];
+        let uploadedFiles = [...selectedFiles];
 
+        // Upload new files and get their URLs
         for (const file of selectedFiles) {
-          const uploadUri = file.uri;
-          let filename = uploadUri.substring(uploadUri.lastIndexOf('/') + 1);
+          if (!file.url) {
+            const uploadUri = file.uri;
+            let filename = uploadUri.substring(uploadUri.lastIndexOf('/') + 1);
 
-          // Add timestamp to file name to avoid duplication
-          const fileExtension = filename.split('.').pop();
-          const fileNameWithoutExtension = filename.replace(
-            `.${fileExtension}`,
-            '',
-          );
-          filename = `${fileNameWithoutExtension}_${Date.now()}.${fileExtension}`;
+            const fileExtension = filename.split('.').pop();
+            const fileNameWithoutExtension = filename.replace(
+              `.${fileExtension}`,
+              '',
+            );
+            filename = `${fileNameWithoutExtension}_${Date.now()}.${fileExtension}`;
 
-          const storageRef = storage().ref(`posts/${userId}/${filename}`);
-          const task = storageRef.putFile(uploadUri);
+            const storageRef = storage().ref(`posts/${userId}/${filename}`);
+            const task = storageRef.putFile(uploadUri);
 
-          await task;
+            await task;
 
-          const fileUrl = await storageRef.getDownloadURL();
-          uploadedFiles.push({
-            url: fileUrl,
-            type: file.type,
-          });
+            const fileUrl = await storageRef.getDownloadURL();
+            uploadedFiles.push({
+              url: fileUrl,
+              type: file.type,
+            });
+          }
         }
 
+        // Update the post in Firestore
         await firestore()
           .collection('post')
-          .add({
+          .doc(item.id)
+          .update({
             description: description,
             category: categoryValue,
             packages: selectedPackages.filter(pkg => pkg !== '0'),
-            postedBy: userId,
-            timestamp: firestore.FieldValue.serverTimestamp(),
-            files: uploadedFiles,
+            files: uploadedFiles.filter(file => file.url), // Keep only files with URLs
           });
 
         setUploading(false);
-        Alert.alert('Success!', 'Post Data submitted successfully.');
+        Alert.alert('Success!', 'Post updated successfully.');
         navigation.navigate('Home');
       } catch (error) {
         setUploading(false);
-        console.error('Error adding post data to Firestore: ', error);
-        Alert.alert('Error', 'Failed to save data. Please try again.');
+        console.error('Error updating post data in Firestore: ', error);
+        Alert.alert('Error', 'Failed to update data. Please try again.');
       }
     }
   };
@@ -217,71 +183,41 @@ const CreatePost = () => {
     });
   };
 
-  const requestStoragePermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Access Permission',
-          message: 'This app needs access to your storage to select files.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
-
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
-  };
-
-  const selectFile = async () => {
-    try {
-      const pickerResult = await DocumentPicker.pickSingle({
-        presentationStyle: 'fullScreen',
-        copyTo: 'cachesDirectory',
-      });
-
-      setSelectedFiles(prevFiles => [
-        ...prevFiles,
-        {
-          uri: pickerResult.uri,
-          type: pickerResult.type,
-          name: pickerResult.name,
-        },
-      ]);
-    } catch (e) {
-      if (DocumentPicker.isCancel(e)) {
-        console.log('User cancelled file picker');
+  const selectFile = () => {
+    launchImageLibrary({mediaType: 'photo'}, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
       } else {
-        console.log('DocumentPicker Error: ', e.message);
+        setSelectedFiles(prevFiles => [
+          ...prevFiles,
+          {uri: response.assets[0].uri, type: 'image'},
+        ]);
       }
-    }
+    });
   };
-
   const togglePackageSelection = item => {
     if (item.value === '0') {
       if (selectedPackages.includes('0')) {
         setSelectedPackages([]);
       } else {
-        setSelectedPackages(packages.map(pkg => pkg.id));
+        setSelectedPackages(packageData.map(pkg => pkg.value));
       }
     } else {
       setSelectedPackages(prevSelectedPackages => {
-        const newSelectedPackages = prevSelectedPackages.includes(item.id)
-          ? prevSelectedPackages.filter(value => value !== item.id)
-          : [...prevSelectedPackages, item.id];
+        const newSelectedPackages = prevSelectedPackages.includes(item.value)
+          ? prevSelectedPackages.filter(value => value !== item.value)
+          : [...prevSelectedPackages, item.value];
 
         if (
-          newSelectedPackages.length === packages.length - 1 &&
+          newSelectedPackages.length === packageData.length - 1 &&
           !newSelectedPackages.includes('0')
         ) {
           newSelectedPackages.push('0');
         } else if (
           newSelectedPackages.includes('0') &&
-          newSelectedPackages.length < packages.length
+          newSelectedPackages.length < packageData.length
         ) {
           return newSelectedPackages.filter(value => value !== '0');
         }
@@ -292,14 +228,11 @@ const CreatePost = () => {
 
   const renderPackageItem = item => (
     <TouchableOpacity
-      key={item.id}
+      key={item.value}
       style={styles.item}
-      onPress={() => togglePackageSelection(item)}
-    >
-      <Text style={styles.textItem}>
-        {item.value === '0' ? item.label : item.name}
-      </Text>
-      {selectedPackages.includes(item.id) && (
+      onPress={() => togglePackageSelection(item)}>
+      <Text style={styles.textItem}>{item.label}</Text>
+      {selectedPackages.includes(item.value) && (
         <FontAwesomeIcon
           icon={faCheck}
           style={styles.icon}
@@ -309,7 +242,7 @@ const CreatePost = () => {
       )}
     </TouchableOpacity>
   );
-  
+
   const renderCategoryItem = item => (
     <TouchableOpacity
       key={item.value}
@@ -338,7 +271,6 @@ const CreatePost = () => {
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}>
-        <GroupFolder onFolderPress={handleFolderPress}  packages={packages}/>
         <View style={styles.formContainer}>
           <View style={{paddingVertical: 10}}>
             <TouchableOpacity
@@ -347,7 +279,6 @@ const CreatePost = () => {
               <View
                 style={{
                   flexDirection: 'row',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
                 }}>
                 <Text style={styles.selectedTextStyle}>
@@ -371,18 +302,18 @@ const CreatePost = () => {
                 <View
                   style={{
                     flexDirection: 'row',
-                    justifyContent: 'space-between',
                     alignItems: 'center',
                   }}>
                   <Text style={styles.selectedTextStyle}>
                     {selectedPackages.length > 0
                       ? selectedPackages
                           .map(
-                            value =>
-                              packages.find(item => item.id === value)?.name,
+                            pkg =>
+                              packageData.find(item => item.value === pkg)
+                                ?.label,
                           )
                           .join(', ')
-                      : 'Select Group'}
+                      : 'Select Package'}
                   </Text>
                   <FontAwesomeIcon
                     icon={faChevronCircleDown}
@@ -394,118 +325,146 @@ const CreatePost = () => {
               </TouchableOpacity>
             </View>
           )}
-          <Modal
-            isVisible={isCategoryDropdownVisible}
-            onBackdropPress={() => setCategoryDropdownVisible(false)}
-            style={{margin: 0, justifyContent: 'flex-end'}}>
-            <View style={styles.modalContent}>
-              {categoryData.map(renderCategoryItem)}
-            </View>
-          </Modal>
-          <Modal
-            isVisible={isPackageDropdownVisible}
-            onBackdropPress={() => setPackageDropdownVisible(false)}
-            style={{margin: 0, justifyContent: 'flex-end'}}>
-            <View style={styles.modalContent}>
-              {packages.map(renderPackageItem)}
-            </View>
-          </Modal>
-          <Text style={styles.label}>Post Description</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Add Message"
-            placeholderTextColor={'black'}
-            onChangeText={setDescription}
-            value={description}
-            multiline
-          />
+          <View style={{paddingVertical: 10}}>
+            <TextInput
+              style={styles.textArea}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Enter Description"
+              multiline
+            />
+          </View>
 
-          {selectedFiles.length > 0 && (
-            <View style={styles.fileContainer}>
-              <ScrollView>
-                {selectedFiles.map((file, index) => (
-                  <View style={styles.fileWrapper} key={index}>
-                    {file.mediaType === 'video' ? (
-                      <Video
-                        source={{uri: file.uri}}
-                        style={styles.videoStyle}
-                        useNativeControls
-                        isLooping={false}
-                      />
-                    ) : (
-                      <Image
-                        source={{uri: file.uri}}
-                        style={styles.postImage}
-                        resizeMode="stretch"
-                      />
-                    )}
-                    <View style={styles.fileName}>
-                      <Text>File selected</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => {
-                        setSelectedFiles(prevFiles =>
-                          prevFiles.filter((_, i) => i !== index),
-                        );
-                      }}>
-                      <FontAwesomeIcon icon={faTrash} size={16} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
+          <ScrollView horizontal style={styles.selectedFilesContainer}>
+            {selectedFiles.map((file, index) => (
+              <View key={index} style={styles.fileContainer}>
+                {file.type === 'image' && (
+                  <Image
+                    source={{uri: file.uri || file.url}}
+                    style={styles.filePreview}
+                  />
+                )}
+                {file.type === 'video' && (
+                  <Video
+                    source={{uri: file.uri || file.url}}
+                    style={styles.filePreview}
+                    useNativeControls
+                    resizeMode="contain"
+                  />
+                )}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => {
+                    setSelectedFiles(prevFiles =>
+                      prevFiles.filter((_, i) => i !== index),
+                    );
+                  }}>
+                  <FontAwesomeIcon
+                    icon={faTrash}
+                    style={styles.removeButtonIcon}
+                    color="red"
+                    size={20}
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.iconContainer}>
+            <View style={styles.iconButtonContainer}>
+              <TouchableOpacity style={styles.iconButton} onPress={selectImage}>
+                <FontAwesomeIcon
+                  icon={faImage}
+                  size={24}
+                  color="black"
+                  style={{marginTop: 12}}
+                />
+              </TouchableOpacity>
+              <Text style={styles.iconLabel}>Image</Text>
             </View>
-          )}
-          {categoryValue && categoryValue === 'advertisement' && (
-            <View style={styles.iconContainer}>
-              <View style={styles.iconButtonContainer}>
-                <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={selectImage}>
-                  <FontAwesomeIcon icon={faImage} size={24} color="black" />
-                </TouchableOpacity>
-                <Text style={styles.iconLabel}>Image</Text>
-              </View>
-              <View style={styles.iconButtonContainer}>
-                <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={selectVideo}>
-                  <FontAwesomeIcon icon={faVideo} size={24} color="black" />
-                </TouchableOpacity>
-                <Text style={styles.iconLabel}>Video</Text>
-              </View>
-              <View style={styles.iconButtonContainer}>
-                <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={selectFile}>
-                  <FontAwesomeIcon icon={faFileText} size={24} color="black" />
-                </TouchableOpacity>
-                <Text style={styles.iconLabel}>File</Text>
-              </View>
+            <View style={styles.iconButtonContainer}>
+              <TouchableOpacity style={styles.iconButton} onPress={selectVideo}>
+                <FontAwesomeIcon
+                  icon={faVideo}
+                  size={24}
+                  color="black"
+                  style={{marginTop: 12}}
+                />
+              </TouchableOpacity>
+              <Text style={styles.iconLabel}>Video</Text>
             </View>
-          )}
+            <View style={styles.iconButtonContainer}>
+              <TouchableOpacity style={styles.iconButton} onPress={selectFile}>
+                <FontAwesomeIcon
+                  icon={faFileText}
+                  size={24}
+                  color="black"
+                  style={{marginTop: 12}}
+                />
+              </TouchableOpacity>
+              <Text style={styles.iconLabel}>File</Text>
+            </View>
+          </View>
+
           {uploading && (
-            <View style={styles.uploadingContainer}>
-              <ActivityIndicator size="large" color="#0000ff" />
-              <Text style={styles.uploadingText}>Uploading...</Text>
-            </View>
+            <ActivityIndicator
+              size="large"
+              color="#0000ff"
+              style={styles.activityIndicator}
+            />
           )}
           <TouchableOpacity
             style={styles.addPostButton}
-            onPress={handleAddPost}>
-            <Text style={styles.addPostButtonText}>Add Post</Text>
+            onPress={handleUpdatePost}>
+            <Text style={styles.addPostButtonText}>Update Post</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.addPostButton}
+            onPress={() => navigation.goBack()}>
+            <Text style={styles.addPostButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Modal
+        isVisible={isCategoryDropdownVisible}
+        onBackdropPress={() => setCategoryDropdownVisible(false)}>
+        <View style={styles.modalContent}>
+          {categoryData.map(renderCategoryItem)}
+        </View>
+      </Modal>
+      <Modal
+        isVisible={isPackageDropdownVisible}
+        onBackdropPress={() => setPackageDropdownVisible(false)}>
+        <View style={styles.modalContent}>
+          {packageData.map(renderPackageItem)}
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  deleteButton: {
+    position: 'absolute',
+    top: 16,
+    right: 5,
+    backgroundColor: '#fff',
+    borderRadius: 50,
+    padding: 5,
+  },
+  textArea: {
+    fontSize: 16,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    padding: 10,
+    height: 100,
+    textAlignVertical: 'top',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    marginBottom: 10,
+    marginTop: 5,
+  },
   selectedFilesContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
   },
   selectedFile: {
     width: '30%',
@@ -513,18 +472,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   filePreview: {
-    width: '100%',
+    width: 200,
     height: 100,
     borderRadius: 5,
   },
-  deleteButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    padding: 5,
-  },
+
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -552,11 +504,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   fileContainer: {
+    width: '100%',
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
     paddingVertical: 8,
+    flexDirection: 'row',
   },
   postImage: {
     width: 48,
@@ -578,31 +531,32 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     height: 48,
     alignItems: 'center',
-    justifyContent: 'center',
     padding: 8,
   },
   fileDelete: {
     marginLeft: 10,
     height: 48,
     alignItems: 'center',
-    justifyContent: 'center',
     padding: 8,
   },
   iconContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     marginTop: 20,
     marginBottom: 20,
+    marginLeft: 8,
+    alignContent: 'center',
+    width: '100%',
   },
   iconButtonContainer: {
     flexDirection: 'column',
-    justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 16,
+    alignContent: 'center',
+    alignSelf: 'center',
   },
   iconButton: {
     width: 50,
     height: 50,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -618,7 +572,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
     padding: 15,
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#DE0A1E',
     borderRadius: 10,
   },
@@ -647,7 +600,6 @@ const styles = StyleSheet.create({
   item: {
     padding: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   textItem: {
@@ -660,4 +612,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreatePost;
+export default EditPost;

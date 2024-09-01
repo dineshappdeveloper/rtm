@@ -1,74 +1,102 @@
 import React from 'react';
-import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faEdit, faTrash} from '@fortawesome/free-solid-svg-icons';
-
+import Video from 'react-native-video';
 const AdvertisementUpdateItem = ({item, onEdit, onDelete, isAdmin}) => {
-  return (
-    <View style={styles.container}>
-      {item.file && item.file.url ? (
+  const renderImageItem = ({item: file}) => {
+    if (file.type === 'video') {
+      return (
+        <Video
+          source={{uri: file.url}}
+          style={styles.itemMedia}
+          controls={true} // Allows user to play/pause the video
+          resizeMode="cover"
+          onError={error => console.log('Error loading video:', error)}
+        />
+      );
+    } else {
+      return (
         <Image
-          source={{uri: item.file.url}}
+          source={{uri: file.url}}
           style={styles.itemImage}
           onError={() => console.log('Error loading image')}
           resizeMode="cover"
+        />
+      );
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {item.files && item.files.length > 0 ? (
+        <FlatList
+          data={item.files}
+          renderItem={renderImageItem}
+          keyExtractor={file => file.url}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.imageListContainer}
         />
       ) : (
         <View style={styles.noImageContainer}>
           <Text style={styles.noImageText}>No Image Available</Text>
         </View>
       )}
-      <View
-        style={{
-          backgroundColor: '#abcd',
-          position: 'absolute',
-          right: 0,
-          bottom: 0,
-        }}>
-        {isAdmin && (
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              onPress={() => onEdit(item)}
-              style={styles.actionButton}>
-              <FontAwesomeIcon icon={faEdit} size={18} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => onDelete(item)}
-              style={styles.actionButton}>
-              <FontAwesomeIcon icon={faTrash} size={18} color="white" />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      {isAdmin && (
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            onPress={() => onEdit(item)}
+            style={styles.actionButton}>
+            <FontAwesomeIcon icon={faEdit} size={18} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onDelete(item)}
+            style={styles.actionButton}>
+            <FontAwesomeIcon icon={faTrash} size={18} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  itemMedia: {
+    width: 360, // Adjust the width of each media item
+    height: 180, // Set height to match the container
+    borderRadius: 5,
+  },
   container: {
-    width: 360,
+    width: '100%', // Ensure the container takes the full width
     borderRadius: 5,
     overflow: 'hidden',
-    alignContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#fff',
     height: 180,
-    marginBottom: 8, // Ensure the container height matches the intended image height
+    marginBottom: 8,
   },
   itemImage: {
-    width: '100%',
-    height: 259, // Set explicit height to match the container
+    width: 360, // Adjust the width of each image (or use '100%' to take full width)
+    height: 180,
+    borderRadius: 5,
   },
   noImageContainer: {
     width: '100%',
-    height: 180, // Match the height of the container
+    height: 180,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0', // Optional: Add a background color to make the no image container more visible
+    backgroundColor: '#f0f0f0',
   },
   noImageText: {
     fontSize: 14,
-    color: '#888', // Optional: Add color to the text for better visibility
+    color: '#888',
   },
   actionsContainer: {
     position: 'absolute',
@@ -82,6 +110,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 5,
     marginLeft: 5,
+  },
+  imageListContainer: {
+    alignItems: 'center',
   },
 });
 
